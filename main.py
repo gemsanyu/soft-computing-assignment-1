@@ -6,6 +6,7 @@ from arguments import parse_args
 from problem import Problem, Rastrigin, StyblinksiTang
 from algo import Algorithm
 from pso import PSO
+from art_bee_colony import ArtificialBeeColonyAlgorithm
 from optimize import minimize
 
 def setup_problem(problem_name: str, n_var: int)->Problem:
@@ -28,15 +29,17 @@ def setup_algo(algo_name:str,
                )->Algorithm:
     if algo_name == "pso":
         return PSO(pop_size, max_iteration, min_velocity, max_velocity, min_inertia, max_inertia)
-    return Algorithm(pop_size)
+    elif algo_name == "abc":
+        return ArtificialBeeColonyAlgorithm(pop_size, max_iteration)
+    return Algorithm(pop_size, max_iteration)
 
 
 def run(problem: Problem, algo: Algorithm):
     filename = "result.csv"
     filepath = pathlib.Path()/filename
     result = minimize(problem, algo)
-
-    
+    print(result)
+    exit()
     lock_filename = "results.lock"
     with filelock.FileLock(lock_filename):
         with open(filepath.absolute(),"a+") as result_file:

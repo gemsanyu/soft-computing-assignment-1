@@ -23,8 +23,8 @@ class Problem:
     
 class Rastrigin(Problem):
     def __init__(self, n_var:int):
-        xl = np.full([n_var,], -3, dtype=float)
-        xu = np.full([n_var,], 3, dtype=float)
+        xl = np.full([n_var,], -5.12, dtype=float)
+        xu = np.full([n_var,], 5.12, dtype=float)
         super().__init__(n_var, xl, xu)
         self.opt_sol: np.ndarray = np.zeros([n_var,], dtype=float)
         self.opt_val: float = 0
@@ -37,11 +37,11 @@ class Rastrigin(Problem):
     
 class StyblinksiTang(Problem):
     def __init__(self, n_var:int):
-        xl = np.full([n_var,], 0, dtype=float)
+        xl = np.full([n_var,], -5, dtype=float)
         xu = np.full([n_var,], 5, dtype=float)
         super().__init__(n_var, xl, xu)
-        self.opt_sol: np.ndarray = np.full([n_var,], 2.903534, dtype=float)
-        self.opt_val: float = n_var*39.16599
+        self.opt_sol: np.ndarray = np.full([n_var,], -2.903534, dtype=float)
+        self.opt_val: float = n_var*(-39.16599)
     
     def evaluate(self, x: np.ndarray)->float:
         return 0.5 * np.sum((x**4) - 16*(x**2) + 5*x)

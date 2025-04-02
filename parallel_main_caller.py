@@ -31,7 +31,10 @@ if __name__ == "__main__":
     os.environ["NUMEXPR_NUM_THREADS"] = "2"  # NumExpr threads
 
 
-    algo_names = ["pso"]
+    algo_names = [
+                    # "pso",
+                  "abc",
+                  ]
     problem_names = ["rastrigin","styblinski-tang"]
     n_vars = [2,4,10,50]
     pop_sizes = [10, 50, 100, 500, 1000]
