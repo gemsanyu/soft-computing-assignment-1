@@ -6,6 +6,7 @@ from arguments import parse_args
 from problem import Problem, Rastrigin, StyblinksiTang
 from algo import Algorithm
 from pso import PSO
+from firefly import FireflyOptimizationAlgorithm
 from art_bee_colony import ArtificialBeeColonyAlgorithm
 from optimize import minimize
 
@@ -22,15 +23,14 @@ def setup_algo(algo_name:str,
                max_velocity:float = 1e-3,
                min_inertia:float = 0.4,
                max_inertia:float = 1.2,
-               #abc
-
-               #ffa
                
                )->Algorithm:
     if algo_name == "pso":
         return PSO(pop_size, max_iteration, min_velocity, max_velocity, min_inertia, max_inertia)
     elif algo_name == "abc":
         return ArtificialBeeColonyAlgorithm(pop_size, max_iteration)
+    elif algo_name == "ffa":
+        return FireflyOptimizationAlgorithm(pop_size, max_iteration)
     return Algorithm(pop_size, max_iteration)
 
 

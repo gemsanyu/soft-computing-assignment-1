@@ -33,7 +33,8 @@ if __name__ == "__main__":
 
     algo_names = [
                     # "pso",
-                  "abc",
+                #   "abc",
+                  "ffa",
                   ]
     problem_names = ["rastrigin","styblinski-tang"]
     n_vars = [2,4,10,50]
