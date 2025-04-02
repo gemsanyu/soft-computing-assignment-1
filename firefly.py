@@ -73,3 +73,6 @@ class FireflyOptimizationAlgorithm(Algorithm):
         best_idx = np.argsort(self.vals)[0]
         self.best_sol = self.population[best_idx]
         self.best_val = self.vals[best_idx]
+        
+    def __repr__(self):
+        return "FFA"

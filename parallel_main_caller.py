@@ -22,13 +22,13 @@ def call_main(problem_name: str,
                     str(max_iteration)])
 
 if __name__ == "__main__":
-    import os
+    # import os
 
-    # Set the number of threads (adjust as needed)
-    os.environ["OMP_NUM_THREADS"] = "2"  # OpenMP threads
-    os.environ["MKL_NUM_THREADS"] = "2"  # Intel MKL threads
-    os.environ["OPENBLAS_NUM_THREADS"] = "2"  # OpenBLAS threads
-    os.environ["NUMEXPR_NUM_THREADS"] = "2"  # NumExpr threads
+    # # Set the number of threads (adjust as needed)
+    # os.environ["OMP_NUM_THREADS"] = "2"  # OpenMP threads
+    # os.environ["MKL_NUM_THREADS"] = "2"  # Intel MKL threads
+    # os.environ["OPENBLAS_NUM_THREADS"] = "2"  # OpenBLAS threads
+    # os.environ["NUMEXPR_NUM_THREADS"] = "2"  # NumExpr threads
 
 
     algo_names = [
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     n_vars = [2,4,10,50]
     pop_sizes = [10, 50, 100, 500, 1000]
     max_iterations =[10000]
-    trial_idxs = list(range(10))
+    trial_idxs = list(range(3))
     args = list(itertools.product(problem_names, algo_names,  n_vars, pop_sizes, max_iterations, trial_idxs))
     with mp.Pool(6) as pool:
         pool.starmap(call_main, args)
