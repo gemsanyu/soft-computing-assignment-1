@@ -38,8 +38,6 @@ def run(problem: Problem, algo: Algorithm):
     filename = "result.csv"
     filepath = pathlib.Path()/filename
     result = minimize(problem, algo)
-    print(result)
-    exit()
     lock_filename = "results.lock"
     with filelock.FileLock(lock_filename):
         with open(filepath.absolute(),"a+") as result_file:

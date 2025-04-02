@@ -133,7 +133,7 @@ class ArtificialBeeColony:
             self.scout_bee_phase()
             self.evaluate_fitness()  # Update best solution
             
-            print(f"Iteration {iteration + 1}: Best Fitness = {self.best_fitness}")
+            # print(f"Iteration {iteration + 1}: Best Fitness = {self.best_fitness}")
             
             
 class ArtificialBeeColonyAlgorithm(Algorithm):
