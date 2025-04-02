@@ -155,3 +155,5 @@ class ArtificialBeeColonyAlgorithm(Algorithm):
         self.best_sol = abc.best_solution
         self.best_val = self.vals[best_idx]
         
+    def __repr__(self):
+        return "ABC"
