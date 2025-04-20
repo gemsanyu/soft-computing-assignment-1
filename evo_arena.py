@@ -1,6 +1,7 @@
 import math
 import random
 from typing import Optional, List
+import multiprocessing as mp
 
 import numpy as np
 from scipy.stats import mannwhitneyu
@@ -15,7 +16,14 @@ from firefly import FireflyOptimizationAlgorithm
 class Island:
     def __init__(self, algo: Algorithm, problem: Problem):
         self.algo: Algorithm = algo
-        self.problem: Problem = problem       
+        self.problem: Problem = problem    
+        
+def update_island(island:Island):
+    for i in range(100):
+        island.algo.update()
+    return island
+
+   
 
 def setup_island(algo_name:str, 
                  problem:Problem, 
@@ -36,7 +44,7 @@ class EvoArena(Algorithm):
                  pop_size: int,
                  max_iteration: int,
                  num_islands:int=10, 
-                 tournament_interval: int=50,
+                 tournament_interval: int=100,
                  current_iteration: int=1):
         super().__init__(pop_size, max_iteration, None)
         self.max_iteration: int = max_iteration
@@ -44,8 +52,9 @@ class EvoArena(Algorithm):
         self.problem: Problem
         self.num_islands = num_islands
         self.islands: List[Island]
-        self.algo_names = ["PSO","FFA"]
+        self.algo_names = ["PSO","FFA","ABC"]
         self.tournament_interval = tournament_interval
+        self.pool = mp.Pool(6)
         
 
     def set_problem(self, problem: Problem, reset=False):
@@ -60,15 +69,18 @@ class EvoArena(Algorithm):
                 self.islands[i].algo.set_problem(problems[i], reset=True)
                 
     def update(self):
+        self.islands = self.pool.map(update_island, self.islands)
+
+        
         for i, island in enumerate(self.islands):
-            island.algo.update()
+            # island.algo.update()
             if self.best_val > island.algo.best_val:
                 self.best_sol = island.algo.best_sol
                 self.best_val = island.algo.best_val
-        self.current_iteration += 1
+        self.current_iteration += self.tournament_interval
 
-        if self.current_iteration % self.tournament_interval != 0:
-            return
+        # if self.current_iteration % self.tournament_interval != 0:
+        #     return
 
         # Tournament
         random_idxs = np.arange(self.num_islands)
@@ -115,7 +127,7 @@ class EvoArena(Algorithm):
     
     def solve(self, problem):
         self.set_problem(problem, reset=True)
-        for t in range(self.max_iteration):
+        for t in range(self.max_iteration//self.tournament_interval):
             self.update()
     
     def __repr__(self):

@@ -42,12 +42,12 @@ def run(problem: Problem, algo: Algorithm):
     filepath = pathlib.Path()/filename
     result = minimize(problem, algo)
     lock_filename = "results.lock"
-    with filelock.FileLock(lock_filename):
-        with open(filepath.absolute(),"a+") as result_file:
-            # result_file.write("Algorithm,Problem,N_Var,Population_Size,Max_Iteration,Opt_Val,Runtime\n")
-            result_string = f"{algo},{problem},{problem.n_var},{algo.pop_size},{algo.max_iteration},{result.opt_val},{result.runtime}\n"
-            result_file.write(result_string)
-            result_file.flush()
+    # with filelock.FileLock(lock_filename):
+    with open(filepath.absolute(),"a+") as result_file:
+        # result_file.write("Algorithm,Problem,N_Var,Population_Size,Max_Iteration,Opt_Val,Runtime\n")
+        result_string = f"{algo},{problem},{problem.n_var},{algo.pop_size},{algo.max_iteration},{result.opt_val},{result.runtime}\n"
+        result_file.write(result_string)
+        result_file.flush()
 
 
 if __name__ == "__main__":
