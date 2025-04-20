@@ -1,89 +1,11 @@
 import math
 from random import random
-from typing import List
+from typing import Optional
 
 import numpy as np
 
 from algo import Algorithm
 from problem import Problem
-
-
-class Particle:
-    def __init__(self,
-                 position: np.ndarray,
-                 min_velocity:float,
-                 max_velocity:float,
-                 init_inertia:float,
-                 dt_inertia: float,
-                 problem:Problem):
-        self.problem: Problem = problem
-        self.position: np.ndarray = position  # Current random position of the particle
-        self.fitness: float = problem.evaluate(position)
-        self.velocity: np.ndarray = np.random.random(position.shape)  # Initial random velocity
-        self.p_best: np.ndarray = position.copy()     # Best position found by this particle
-        self.p_best_fitness: float = self.fitness   # Fitness of the best position
-        self.min_velocity: float = min_velocity
-        self.max_velocity: float = max_velocity
-        self.inertia: float = init_inertia
-        self.dt_inertia: float = dt_inertia
-        
-
-    def update(self, g_best:np.ndarray, c1=0.5, c2=0.5):
-        g_best_fitness = self.problem.evaluate(g_best)
-        r1, r2 = random(), random()
-
-        # Update velocity
-        new_velocity = self.inertia*self.velocity + c1*r1*(self.p_best-self.position) + c2*r2*(g_best-self.position)
-        new_velocity = np.clip(new_velocity, self.min_velocity, self.max_velocity)
-        self.velocity = new_velocity
-        # Limit velocity to avoid explosion using numpy.clip
-        
-        # Update position
-        new_position = self.position + new_velocity
-        new_position = self.problem.clip_to_bound(new_position)
-        self.position = new_position
-
-        # Constrain position to search space bounds using numpy.clip
-        new_fitness = self.problem.evaluate(new_position)
-        self.fitness = new_fitness
-        if new_fitness < self.p_best_fitness:
-            self.p_best, self.p_best_fitness = new_position, new_fitness
-            if new_fitness < g_best_fitness:
-                g_best, g_best_fitness = new_position, new_fitness
-
-        # update inertia
-        self.inertia += self.dt_inertia
-
-        # Update personal best if the current position is better
-        return g_best, g_best_fitness
-
-class Swarm:
-    def __init__(self,
-                 initial_positions: np.ndarray,
-                 num_particles:int,
-                 min_velocity:float,
-                 max_velocity:float,
-                 init_inertia:float,
-                 dt_inertia:float,
-                 problem: Problem):
-        self.particles: List[Particle] = [Particle(initial_positions[i], min_velocity, max_velocity, init_inertia, dt_inertia, problem) for i in range(num_particles)]
-        self.problem: Problem = problem
-        self.g_best: np.ndarray = self.find_global_best()
-        self.g_best_fitness: float = problem.evaluate(self.g_best)
-        # Initialize particles with random positions
-
-    def find_global_best(self):
-        g_best_fitness = 99999999
-        g_best = 0
-        for particle in self.particles:
-            if particle.p_best_fitness<g_best_fitness:
-                g_best, g_best_fitness = particle.p_best, particle.p_best_fitness
-        return g_best
-
-    def update(self):             
-        for particle in self.particles:
-            self.g_best, self.g_best_fitness = particle.update(self.g_best)
-    
 
 class PSO(Algorithm):
     def __init__(self, 
@@ -92,8 +14,12 @@ class PSO(Algorithm):
                  min_velocity: float, 
                  max_velocity: float,
                  min_inertia: float,
-                 max_inertia: float):
-        super().__init__(pop_size, max_iteration)
+                 max_inertia: float,
+                 c1: float = 0.5,
+                 c2: float = 0.5,
+                 initial_population: Optional[np.ndarray]=None,
+                 current_iteration: int=1):
+        super().__init__(pop_size, max_iteration, initial_population)
         self.max_iteration: int = max_iteration
         self.min_velocity: float = min_velocity
         self.max_velocity: float = max_velocity
@@ -101,17 +27,74 @@ class PSO(Algorithm):
         self.max_inertia: float = max_inertia
         self.init_inertia: float = max_inertia
         self.dt_inertia = (self.min_inertia-self.max_inertia)/self.max_iteration
+        self.current_iteration = current_iteration
+        
+        self.c1, self.c2 = c1, c2
+        self.velocities: np.ndarray  # Initial random velocity of every particle
+        self.p_bests: np.ndarray     # Best position found by every particle
+        self.p_bests_fitness: np.ndarray   # Fitness of the best position
+        self.inertias: np.ndarray
+        self.g_best: np.ndarray
+        self.g_best_val: np.ndarray
+        self.problem: Problem
 
-    def solve(self, problem: Problem):
-        self.reset(problem)
-        swarm = Swarm(self.population, self.pop_size, self.min_velocity, self.max_velocity, self.init_inertia, self.dt_inertia, problem)
-        for t in range(self.max_iteration):
-            swarm.update()
-    
-        # maybe just record the p_best as the final population
+    def set_problem(self, problem: Problem, reset=False):
+        self.problem = problem
+        if reset:
+            self.reset(problem)
+            self.inertias = np.full((self.pop_size,), self.init_inertia)
+            self.p_bests = self.population.copy()
+            self.p_bests_fitness = self.vals.copy()
+            self.g_best = self.best_sol.copy()
+            self.g_best_val = self.best_val
+            self.velocities = np.random.random(self.population.shape)
+            self.velocities = np.clip(self.velocities, self.min_velocity, self.max_velocity)
+        else:
+            self.population = np.stack([problem.clip_to_bound(x) for x in self.population])
+            self.vals = np.asanyarray([problem.evaluate(x) for x in self.population])
+            self.p_bests = np.stack([problem.clip_to_bound(x) for x in self.p_bests])
+            self.p_bests_fitness = np.asanyarray([problem.evaluate(x) for x in self.p_bests])
+            is_replace_pbests = self.vals < self.p_bests_fitness
+            self.p_bests[is_replace_pbests] = self.population[is_replace_pbests]
+            self.p_bests_fitness[is_replace_pbests] = self.vals[is_replace_pbests]
+            best_idx = np.argmin(self.p_bests_fitness)
+            self.g_best = self.p_bests[best_idx].copy()
+            self.g_best_val = self.p_bests_fitness[best_idx].copy()
+
+    def update(self):
+        self.current_iteration += 1
         for i in range(self.pop_size):
-            self.population[i] = swarm.particles[i].p_best
-            self.vals[i] = swarm.particles[i].p_best_fitness
+            p_best = self.p_bests[i]
+            position = self.population[i]
+            velocity = self.velocities[i]
+            r1, r2 = random(), random()
+
+            # Update velocity
+            new_velocity = self.inertias[i]*velocity+ self.c1*r1*(p_best-position) + self.c2*r2*(self.g_best-position)
+            new_velocity = np.clip(new_velocity, self.min_velocity, self.max_velocity)
+            self.velocities[i] = new_velocity
+            
+            # Update position
+            new_position = position + new_velocity
+            new_position = self.problem.clip_to_bound(new_position)
+            self.population[i] = new_position
+
+            # Constrain position to search space bounds using numpy.clip
+            new_fitness = self.problem.evaluate(new_position)
+            self.vals[i] = new_fitness
+            if new_fitness < self.p_bests_fitness[i]:
+                self.p_bests[i], self.p_bests_fitness[i] = new_position, new_fitness
+                if new_fitness < self.g_best_val:
+                    self.g_best, self.g_best_val = new_position, new_fitness
+
+            # update inertia
+            self.inertias[i] += self.dt_inertia
+        self.best_sol, self.best_val = self.g_best, self.g_best_val
+    
+    def solve(self, problem):
+        self.set_problem(problem, reset=True)
+        for t in range(self.max_iteration):
+            self.update()
     
     def __repr__(self):
         return "PSO"

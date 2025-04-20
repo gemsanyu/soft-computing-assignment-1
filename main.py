@@ -8,6 +8,7 @@ from algo import Algorithm
 from pso import PSO
 from firefly import FireflyOptimizationAlgorithm
 from art_bee_colony import ArtificialBeeColonyAlgorithm
+from evo_arena import EvoArena
 from optimize import minimize
 
 def setup_problem(problem_name: str, n_var: int)->Problem:
@@ -31,6 +32,8 @@ def setup_algo(algo_name:str,
         return ArtificialBeeColonyAlgorithm(pop_size, max_iteration)
     elif algo_name == "ffa":
         return FireflyOptimizationAlgorithm(pop_size, max_iteration)
+    elif algo_name == "evoarena":
+        return EvoArena(pop_size, max_iteration)
     return Algorithm(pop_size, max_iteration)
 
 

@@ -5,7 +5,7 @@ def parse_args():
     parser.add_argument("--algo-name",
                         type=str,
                         required=True,
-                        choices=["pso","abc","ffa"],
+                        choices=["pso","abc","ffa","evoarena"],
                         help="algo name")
     parser.add_argument("--problem-name",
                         type=str,
